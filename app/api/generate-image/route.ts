@@ -1,20 +1,18 @@
-import { GoogleGenAI } from "@google/genai";
+import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
+export async function POST(req: Request) {
   const apiKey = process.env.API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({
-      error: "No Arcane Key detected in the environment",
-    });
+    return NextResponse.json(
+      { error: 'No Arcane Key detected in the environment' },
+      { status: 500 }
+    );
   }
 
   try {
-    const { prompt, settings } = req.body;
+    const { prompt, settings } = await req.json();
 
     const ai = new GoogleGenAI({ apiKey });
 
@@ -24,7 +22,7 @@ export default async function handler(req: any, res: any) {
       },
     };
 
-    if (settings.model === "gemini-3-pro-image-preview") {
+    if (settings.model === 'gemini-3-pro-image-preview') {
       config.imageConfig.imageSize = settings.imageSize;
     }
 
@@ -34,24 +32,25 @@ export default async function handler(req: any, res: any) {
       config,
     });
 
-    const part =
-      response.candidates?.[0]?.content?.parts?.find(
-        (p: any) => p.inlineData
-      );
+    const part = response.candidates?.[0]?.content?.parts?.find(
+      (p: any) => p.inlineData
+    );
 
     if (!part?.inlineData) {
-      return res.status(500).json({
-        error: "The ritual completed but no visual imagery was manifested.",
-      });
+      return NextResponse.json(
+        { error: 'The ritual completed but no visual imagery was manifested.' },
+        { status: 500 }
+      );
     }
 
-    res.status(200).json({
+    return NextResponse.json({
       image: `data:image/png;base64,${part.inlineData.data}`,
     });
   } catch (err: any) {
-    console.error("Gemini Ritual Error:", err);
-    res.status(500).json({
-      error: err.message || "Unexpected ritual failure",
-    });
+    console.error('Gemini Ritual Error:', err);
+    return NextResponse.json(
+      { error: err.message || 'Unexpected ritual failure' },
+      { status: 500 }
+    );
   }
 }

@@ -69,12 +69,11 @@ const App: React.FC = () => {
     setError(null);
 
     try {
-      const res = await fetch("app/api/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, settings }),
-      });
-
+      const res = await fetch("/api/generate-image", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt, settings }),
+    });
       const data = await res.json();
 
       if (!res.ok) {
